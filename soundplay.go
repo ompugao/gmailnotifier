@@ -28,23 +28,13 @@ func (p *Player) onMessage(bus *gst.Bus, msg *gst.Message) {
 }
 
 func (p *Player) onEndofStream(bus *gst.Bus, msg *gst.Message) {
-	p.pipe.SetState(gst.STATE_NULL)
+	p.pipe.SetState(gst.STATE_PAUSED)
 	p.loop.Quit()
 }
 
-func main() {
-	if len(os.Args) < 2 || len(os.Args) > 2 {
-		fmt.Println("usage: ", os.Args[0], " audiofile")
-		os.Exit(1)
-	}
-
+func playaudio(filename string) {
 	p := new(Player)
-	p.file_path = os.Args[1]
-	if _, err := os.Stat(p.file_path); os.IsNotExist(err) {
-		fmt.Printf("no such file or directory: %s", p.file_path)
-		return
-	}
-
+	p.file_path = filename
 	p.pipe = gst.ElementFactoryMake("playbin2", "autoplay")
 	p.bus = p.pipe.GetBus()
 	p.bus.AddSignalWatch()
@@ -54,15 +44,23 @@ func main() {
 	//p.bus.Connect("sync-message::element", (*Player).onSyncMessage, p)
 
 	p.pipe.SetProperty("uri", "file://"+p.file_path)
-	p.pipe.SetState(gst.STATE_PLAYING)
-	//for {
-	//state, _, _ := p.pipe.GetState(gst.CLOCK_TIME_NONE)
-	//fmt.Println(state)
-	//if state == gst.STATE_NULL {
-	//break
-	//}
-	//time.Sleep(time.Second * 1)
-	//}
+  p.pipe.SetState(gst.STATE_PLAYING)
 	p.loop = glib.NewMainLoop(nil)
 	p.loop.Run()
+}
+func main() {
+	if len(os.Args) < 2 || len(os.Args) > 2 {
+		fmt.Println("usage: ", os.Args[0], " audiofile")
+		os.Exit(1)
+	}
+
+  filename := os.Args[1]
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		fmt.Printf("no such file or directory: %s", filename)
+		return
+	}
+  for i := 0; i < 5; i+=1 {
+    fmt.Println(i)
+    playaudio(filename)
+  }
 }
